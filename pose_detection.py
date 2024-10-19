@@ -3,6 +3,7 @@ import mediapipe as mp
 import cv2
 import numpy as np
 from PIL import Image
+from pose_calculations import calculate_bicep_curl, calculate_tricep_extension, calculate_shoulder_press
 
 st.title("Pose Detection using mediapipe")
 
@@ -26,19 +27,6 @@ st.markdown(
 st.sidebar.title("Settings")
 st.sidebar.subheader("Choose the model")
 
-def calculate_angle(a, b, c):
-    a = np.array(a)
-    b = np.array(b)
-    c = np.array(c)
-    
-    radians = np.arctan2(c[1] - b[1], c[0] - b[0]) - np.arctan2(a[1] - b[1], a[0] - b[0])
-    angle = np.abs(radians * 180.0 / np.pi)
-    
-    if angle > 180.0:
-        angle = 360 - angle
-    
-    return angle
-
 @st.cache_resource
 def load_model():
     mp_pose = mp.solutions.pose
@@ -56,6 +44,9 @@ st.sidebar.text("Reps Counter")
 reps_counter = st.sidebar.empty()
 
 stop_button = st.sidebar.button('Stop')
+bicep_button = st.sidebar.button('Bicep Curl')
+tricep_button = st.sidebar.button('Tricep Extension')
+shoulder_button = st.sidebar.button('Shoulder Press')
 
 while cap.isOpened():
     ret, frame = cap.read()
@@ -72,24 +63,12 @@ while cap.isOpened():
     try:
         landmarks = result.pose_landmarks.landmark
         
-        shoulder = [landmarks[mp.solutions.pose.PoseLandmark.RIGHT_SHOULDER.value].x,
-                    landmarks[mp.solutions.pose.PoseLandmark.RIGHT_SHOULDER.value].y]
-        elbow = [landmarks[mp.solutions.pose.PoseLandmark.RIGHT_ELBOW.value].x,
-                 landmarks[mp.solutions.pose.PoseLandmark.RIGHT_ELBOW.value].y]
-        wrist = [landmarks[mp.solutions.pose.PoseLandmark.RIGHT_WRIST.value].x,
-                 landmarks[mp.solutions.pose.PoseLandmark.RIGHT_WRIST.value].y]
-        
-        angle = calculate_angle(shoulder, elbow, wrist)
-        
-        cv2.putText(image, str(angle), 
-                    tuple(np.multiply(elbow, [640, 480]).astype(int)), 
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2, cv2.LINE_AA)
-        
-        if angle > 160:
-            stage = "down"
-        if angle < 30 and stage == 'down':
-            stage = "up"
-            counter += 1
+        if bicep_button:
+            counter, stage = calculate_bicep_curl(landmarks, image, counter, stage)
+        if tricep_button:
+            counter, stage = calculate_tricep_extension(landmarks, image, counter, stage)
+        if shoulder_button:
+            counter, stage = calculate_shoulder_press(landmarks, image, counter, stage)
         
     except:
         pass
@@ -106,4 +85,3 @@ while cap.isOpened():
 
 cap.release()
 cv2.destroyAllWindows()
-
