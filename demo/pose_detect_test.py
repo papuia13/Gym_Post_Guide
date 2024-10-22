@@ -25,8 +25,8 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
-st.sidebar.title("Settings")
-st.sidebar.subheader("Choose the model")
+st.sidebar.title("Choose the model")
+st.sidebar.subheader("Status")
 
 @st.cache_resource
 def load_model():
@@ -49,7 +49,7 @@ left_set = 0
 right_set = 0
 
 stframe = st.empty()
-st.sidebar.text("Status : ")
+#st.sidebar.text("Status : ")
 sets_counter = st.sidebar.empty()
 reps_counter = st.sidebar.empty()
 right_sets_counter = st.sidebar.empty()

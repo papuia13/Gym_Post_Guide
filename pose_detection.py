@@ -1,9 +1,7 @@
 import streamlit as st
 import mediapipe as mp
 import cv2
-import numpy as np
-from PIL import Image
-from pose_calculations import calculate_bicep_curl, calculate_tricep_extension, calculate_shoulder_press
+from pose_cal_test import calculate_bicep_curl, calculate_tricep_extension, calculate_shoulder_press, calculate_deadlift, calculate_squat, calculate_plank
 
 st.title("Pose Detection using mediapipe")
 
@@ -11,21 +9,24 @@ st.markdown(
     """
     <style>
     [data-testid="stSidebar"][aria-expanded="true"] > div:first-child {
-        width: 350px;
+        width: 250px;  /* Reduced width */
     }
     [data-testid="stSidebar"][aria-expanded="false"] > div:first-child {
-        width: 350px;
-        margin-left: -350px;   
+        width: 250px;  /* Reduced width */
+        margin-left: -250px;   
     }
     .css-1v3fvcr {
         width: 100%;
+    }
+    [data-testid="stImage"] {
+        max-width: 100%;
     }
     </style>
     """,
     unsafe_allow_html=True,
 )
-st.sidebar.title("Settings")
-st.sidebar.subheader("Choose the model")
+st.sidebar.title("Choose the model")
+st.sidebar.subheader("Status")
 
 @st.cache_resource
 def load_model():
@@ -38,15 +39,31 @@ pose = load_model()
 cap = cv2.VideoCapture(0)
 counter = 0
 stage = None
+sets = 0
+
+left_counter = 0
+right_counter = 0
+left_stage = None
+right_stage = None
+left_set = 0
+right_set = 0
 
 stframe = st.empty()
-st.sidebar.text("Reps Counter")
+#st.sidebar.text("Status : ")
+sets_counter = st.sidebar.empty()
 reps_counter = st.sidebar.empty()
+right_sets_counter = st.sidebar.empty()
+left_sets_counter = st.sidebar.empty()
+right_reps_counter = st.sidebar.empty()
+left_reps_counter = st.sidebar.empty()
 
-stop_button = st.sidebar.button('Stop')
 bicep_button = st.sidebar.button('Bicep Curl')
-tricep_button = st.sidebar.button('Tricep Extension')
+tricep_button = st.sidebar.button('Tricep')
 shoulder_button = st.sidebar.button('Shoulder Press')
+deaflift_button = st.sidebar.button('Deadlift')
+stop_button = st.sidebar.button('Stop')
+
+current_exercise=None
 
 while cap.isOpened():
     ret, frame = cap.read()
@@ -64,22 +81,71 @@ while cap.isOpened():
         landmarks = result.pose_landmarks.landmark
         
         if bicep_button:
-            counter, stage = calculate_bicep_curl(landmarks, image, counter, stage)
-        if tricep_button:
-            counter, stage = calculate_tricep_extension(landmarks, image, counter, stage)
-        if shoulder_button:
-            counter, stage = calculate_shoulder_press(landmarks, image, counter, stage)
+            if current_exercise != 'bicep':
+                # Reset counters when switching to bicep
+                right_counter = 0
+                left_counter = 0
+                right_stage = None
+                left_stage = None
+                right_set = 0
+                left_set = 0
+                current_exercise = 'bicep'
+            right_counter, left_counter, right_stage, left_stage, right_set, left_set = calculate_bicep_curl(landmarks, image, right_counter, left_counter, right_stage, left_stage, right_set, left_set)
         
-    except:
-        pass
-    
+        elif tricep_button:
+            if current_exercise != 'tricep':
+                # Reset counters when switching to tricep
+                right_counter = 0
+                left_counter = 0
+                right_stage = None
+                left_stage = None
+                right_set = 0
+                left_set = 0
+                current_exercise = 'tricep'
+            right_counter, left_counter, right_stage, left_stage, right_set, left_set = calculate_tricep_extension(landmarks, image, right_counter, left_counter, right_stage, left_stage, right_set, left_set)
+            
+        elif shoulder_button:
+            if current_exercise != 'shoulder':
+                # Reset counters when switching to shoulder
+                right_counter = 0
+                left_counter = 0
+                right_stage = None
+                left_stage = None
+                right_set = 0
+                left_set = 0
+                current_exercise = 'shoulder'
+            right_counter, left_counter, right_stage, left_stage, right_set, left_set = calculate_shoulder_press(landmarks, image, right_counter, left_counter, right_stage, left_stage, right_set, left_set)
+            
+        elif deaflift_button:
+            if current_exercise != 'deadlift':
+                right_counter = 0
+                left_counter = 0
+                right_stage = None
+                left_stage = None
+                right_set = 0
+                left_set = 0
+                current_exercise = 'deadlift'
+            counter, stage, sets = calculate_deadlift(landmarks, image, counter, stage, sets)
+            
+    except AttributeError as e:
+        st.error(f"An error occurred: {e}")
+        
+    # Displaying the landmarks and connections    
     mp.solutions.drawing_utils.draw_landmarks(image, result.pose_landmarks, mp.solutions.pose.POSE_CONNECTIONS,
-                                              mp.solutions.drawing_utils.DrawingSpec(color=(245, 117, 66), thickness=2, circle_radius=2),
-                                              mp.solutions.drawing_utils.DrawingSpec(color=(245, 66, 230), thickness=2, circle_radius=2))
+    mp.solutions.drawing_utils.DrawingSpec(color=(245, 117, 66), thickness=2, circle_radius=2),
+    mp.solutions.drawing_utils.DrawingSpec(color=(245, 66, 230), thickness=2, circle_radius=2))
     
-    stframe.image(image, channels='BGR')
+    # Displaying the main Camera feed    
+    stframe.image(image, channels='BGR', use_column_width=False, width=900)
+    
+    # Status Outputs
+    right_reps_counter.text(f"Right Reps: {right_counter}")
+    left_reps_counter.text(f"Left Reps: {left_counter}")
+    right_sets_counter.text(f"Right Sets: {right_set}")
+    left_sets_counter.text(f"Left Sets: {left_set}")  
     reps_counter.text(f"Reps: {counter}")
-    
+    sets_counter.text(f"Sets: {sets}")
+            
     if stop_button:
         break
 
