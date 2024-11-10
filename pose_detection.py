@@ -1,7 +1,7 @@
 import streamlit as st
 import mediapipe as mp
 import cv2
-from pose_cal_test import calculate_bicep_curl, calculate_tricep_extension, calculate_shoulder_press, calculate_deadlift, calculate_squat, calculate_plank
+from pose_calculations import calculate_bicep_curl, calculate_tricep_extension, calculate_shoulder_press, calculate_deadlift, calculate_squat, calculate_plank
 
 st.title("Pose Detection using mediapipe")
 
