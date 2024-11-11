@@ -1,34 +1,37 @@
 import streamlit as st
-import os
 
 def main():
     st.title("Gym Action Tracker")
 
-    menu = ["Login", "Register"]
-    choice = st.sidebar.selectbox("Menu", menu)
+    st.sidebar.header("Navigation")
+    if st.sidebar.button("Pose Detection"):
+        st.experimental_set_query_params(page="pose_detection")
+        st.experimental_rerun()
 
-    if choice == "Login":
-        st.subheader("Login Section")
+    if st.sidebar.button("Mass Index Calculator"):
+        st.experimental_set_query_params(page="mass_index_calculator")
+        st.experimental_rerun()
 
-        username = st.text_input("Username")
-        password = st.text_input("Password", type='password')
-        if st.button("Login"):
-            if username == "admin" and password == "admin":
-                st.success("Logged In as {}".format(username))
-                # Open pose_detection.py
-                script_path = "/t:/MCA/3rd_Sem/ECP/Gym_Action_Tracker/pose_detection.py"
-                os.environ["STREAMLIT_RUN_SCRIPT"] = script_path
-                st.experimental_rerun()
-            else:
-                st.warning("Incorrect Username/Password")
+    if st.sidebar.button("Nutrition Guide"):
+        st.experimental_set_query_params(page="nutrition_guide")
+        st.experimental_rerun()
 
-    elif choice == "Register":
-        st.subheader("Create New Account")
-        new_user = st.text_input("Username")
-        new_password = st.text_input("Password", type='password')
-        if st.button("Register"):
-            st.success("You have successfully created an account")
-            st.info("Go to Login Menu to login")
+    query_params = st.experimental_get_query_params()
+    page = query_params.get("page", [None])[0]
 
-if __name__ == '__main__':
+    if page == "pose_detection":
+        st.write("Navigating to Pose Detection module")
+        import pose_detection
+        pose_detection.main()
+
+    elif page == "mass_index_calculator":
+        import pages.mass_index_calculator as mass_index_calculator
+        mass_index_calculator.main()
+
+    elif page == "nutrition_guide":
+        st.write("Navigating to Nutrition Guide module")
+        import pages.nutrition_guide as nutrition_guide
+        nutrition_guide.main()
+
+if __name__ == "__main__":
     main()
