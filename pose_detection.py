@@ -4,7 +4,7 @@ import cv2
 from pose_calculations import calculate_bicep_curl, calculate_tricep_extension, calculate_shoulder_press, calculate_deadlift, calculate_squat, calculate_plank
 
 def pose_detection():
-    st.title("Pose Detection")
+    st.title("Active")
     st.write("Please Stand 3 meters away from the camera for better results")
 
     st.markdown(
