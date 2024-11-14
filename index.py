@@ -47,7 +47,7 @@ st.set_page_config(page_title="Gym Action Tracker", layout="wide", initial_sideb
 st.markdown("""
     <style>
     .main {
-        background-color: #f0f2f6;
+        background: linear-gradient(to right, #f0f2f6, #e6e6e6);
         color: #333;
     }
     .sidebar .sidebar-content {
